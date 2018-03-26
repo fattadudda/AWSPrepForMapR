@@ -1,0 +1,53 @@
+16CPU/30GBRAM: c4.4xlarge
+8CPU/15GBRAM: c4.2xlarge
+
+
+Ubuntu Server 16.04 LTS (HVM), SSD Volume Type - ami-da05a4a0
+
+Red Hat Enterprise Linux 7.4 (HVM), SSD Volume Type - ami-c998b6b2
+Amazon Linux AMI 2017.09.1 (HVM), SSD Volume Type - ami-55ef662f
+
+aws ec2 run-instances --image-id ami-da05a4a0 --security-group-ids lkang-sg --count 3 --instance-type c4.2xlarge --key-name lkang --block-device-mappings DeviceName="/dev/sda1",Ebs={VolumeSize=100} --query 'Instances[*].InstanceId'
+
+
+[
+    "i-0d4f1b3b07705ddf3",
+    "i-07afb8fc5cf66b12a",
+    "i-0868fc68238f80828"
+]
+
+
+--elastic ip block 1: oss1, oss2, oss3 (for open source cluster) 34.239.60.120(master) 34.239.60.246 34.237.228.217
+aws ec2 associate-address --instance-id i-0519966f4d2d1ded6 --public-ip 34.239.60.120 && aws ec2 associate-address --instance-id i-0bde91393519195d8 --public-ip 34.239.60.246 && aws ec2 associate-address --instance-id i-0e4d82ae4841cdde9 --public-ip 34.237.228.217
+
+--names for oss cluster
+aws ec2 create-tags --resources i-0987b6b66f91de9b4 --tags Key=Name,Value=lkang-oss1 && aws ec2 create-tags --resources i-0114b143bbda52cb1 --tags Key=Name,Value=lkang-oss2 && aws ec2 create-tags --resources i-0479a3ed4c2a1e85d --tags Key=Name,Value=lkang-oss3
+
+--elastic ip block 2: (node1, node2, node3, for RP5-n cluster) 34.239.81.188 52.72.83.103 52.200.185.81
+--cluster: lkang-rp5-n.demo-rlec.redislabs.com
+aws ec2 associate-address --instance-id i-0a6838de8e4838a40 --public-ip 34.239.81.188 && aws ec2 associate-address --instance-id i-0e30b48987d3f6fbb --public-ip 52.72.83.103 && aws ec2 associate-address --instance-id i-0267b01608d205d4 --public-ip 52.200.185.81
+
+--names for rp5-n cluster
+aws ec2 create-tags --resources i-0a6838de8e4838a40 --tags Key=Name,Value=node1.lkang-rp5-n.demo-rlec.redislabs.com && aws ec2 create-tags --resources i-0e30b48987d3f6fb --tags Key=Name,Value=node2.lkang-rp5-n.demo-rlec.redislabs.com && aws ec2 create-tags --resources i-0267b01608d205d45 --tags Key=Name,Value=node3.lkang-rp5-n.demo-rlec.redislabs.com
+
+--elastic ip block 3: (node1, 2, 3 for RP-s cluster) 34.196.83.191 34.238.96.16 52.202.189.213
+--cluster: lkang-rp5-s.demo-rlec.redislabs.com
+aws ec2 associate-address --instance-id i-005b87793587abdb9 --public-ip 34.196.83.191 && aws ec2 associate-address --instance-id i-0093722414d9aa058 --public-ip 34.238.96.16 && aws ec2 associate-address --instance-id i-06aeca01272a92000 --public-ip 52.202.189.213
+
+--names for rp5-s cluster
+aws ec2 create-tags --resources i-005b87793587abdb9 --tags Key=Name,Value=node1.lkang-rp5-s.demo-rlec.redislabs.com && aws ec2 create-tags --resources i-0093722414d9aa058 --tags Key=Name,Value=node2.lkang-rp5-s.demo-rlec.redislabs.com && aws ec2 create-tags --resources i-06aeca01272a92000 --tags Key=Name,Value=node3.lkang-rp5-s.demo-rlec.redislabs.com
+
+--elsastic ip block 4: loader/client
+aws ec2 associate-address --instance-id i-0519966f4d2d1ded6 --public-ip 34.225.129.159
+
+
+
+
+aws ec2 associate-address --instance-id i-0f9c7126b7e9b6680 --public-ip 34.225.129.159
+
+memtier_benchmark -s localhost -p 14204 --hide-histogram --key-maximum=100000000 -n allkeys -d 500 --key-pattern=P:P --ratio=1:0
+
+memtier_benchmark --ratio=1:4 --test-time=120 -d 300 -t 2 -c 25 --pipeline=40 --key-pattern=S:S --hide-histogram -x 1000 -s localhost -p 14204
+
+
+f
