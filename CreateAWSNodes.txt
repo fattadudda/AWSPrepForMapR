@@ -48,6 +48,3 @@ aws ec2 associate-address --instance-id i-0f9c7126b7e9b6680 --public-ip 34.225.1
 memtier_benchmark -s localhost -p 14204 --hide-histogram --key-maximum=100000000 -n allkeys -d 500 --key-pattern=P:P --ratio=1:0
 
 memtier_benchmark --ratio=1:4 --test-time=120 -d 300 -t 2 -c 25 --pipeline=40 --key-pattern=S:S --hide-histogram -x 1000 -s localhost -p 14204
-
-
-f
